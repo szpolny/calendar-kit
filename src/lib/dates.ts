@@ -59,6 +59,15 @@ export function countdown(iso: string, now: number): string {
 	return h > 0 ? `${h}h ${m}m` : `${m} min`;
 }
 
+export function isTimeZone(zone: string): boolean {
+	try {
+		formatter('en', { timeZone: zone });
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 export function zoneName(iso: string, timeZone: string): string {
 	return (
 		formatter('en-US', { timeZone, timeZoneName: 'short' })

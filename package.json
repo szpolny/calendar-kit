@@ -29,6 +29,10 @@
       "types": "./dist/text.d.ts",
       "default": "./dist/text.js"
     },
+    "./prefs": {
+      "types": "./dist/prefs.d.ts",
+      "default": "./dist/prefs.js"
+    },
     "./SearchPicker.svelte": {
       "types": "./dist/components/SearchPicker.svelte.d.ts",
       "svelte": "./dist/components/SearchPicker.svelte"
@@ -52,6 +56,10 @@
     "./SelectionSheet.svelte": {
       "types": "./dist/components/SelectionSheet.svelte.d.ts",
       "svelte": "./dist/components/SelectionSheet.svelte"
+    },
+    "./BackToTop.svelte": {
+      "types": "./dist/components/BackToTop.svelte.d.ts",
+      "svelte": "./dist/components/BackToTop.svelte"
     }
   },
   "sideEffects": [

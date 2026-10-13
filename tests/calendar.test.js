@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { localDate, addDays, weekStart, fmtRange, zonedToUtc, endMs } from '../dist/dates.js';
+import { localDate, addDays, weekStart, fmtRange, zonedToUtc, endMs, isTimeZone } from '../dist/dates.js';
+import { readPrefs, writePrefs } from '../dist/prefs.js';
 import { escapeText, fold, nextDay, utcStamp, buildCalendar } from '../dist/ics.js';
 import { slugify, decodeEntities } from '../dist/text.js';
 
@@ -44,4 +45,26 @@ test('end instants, slugs and entity decoding', () => {
 	assert.equal(endMs({ allDay: false, end: '2026-11-01T12:00:00Z' }), Date.parse('2026-11-01T12:00:00Z'));
 	assert.equal(slugify('Gran Premio de España 2026!'), 'gran-premio-de-espana-2026');
 	assert.equal(decodeEntities(' AT&amp;T &#8211; Ciudad&nbsp;de\n  México &#x2019; '), 'AT&T – Ciudad de México ’');
+});
+
+test('time zones are validated and prefs survive blocked or corrupt storage', () => {
+	assert.equal(isTimeZone('Europe/Warsaw'), true);
+	assert.equal(isTimeZone('Mars/Olympus'), false);
+
+	const store = new Map();
+	const storage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
+	Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+	try {
+		assert.equal(readPrefs('app:prefs'), null);
+		writePrefs('app:prefs', { alarm: 15 });
+		assert.deepEqual(readPrefs('app:prefs'), { alarm: 15 });
+		store.set('app:prefs', '{oops');
+		assert.equal(readPrefs('app:prefs'), null);
+		store.set('app:prefs', '[1]');
+		assert.equal(readPrefs('app:prefs'), null);
+		storage.setItem = () => { throw new Error('QuotaExceededError'); };
+		writePrefs('app:prefs', { alarm: 30 });
+	} finally {
+		delete globalThis.localStorage;
+	}
 });
