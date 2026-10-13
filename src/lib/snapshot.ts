@@ -38,3 +38,43 @@ export async function fetchSnapshot<T>(url: string): Promise<T> {
 	if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
 	return res.json();
 }
+
+export interface SourceStatus {
+	/** human-readable origin, shown in the UI */
+	source: string;
+	ok: boolean;
+	error?: string;
+	/** when the data now served was fetched; kept from the last good run while a source fails */
+	fetchedAt?: string;
+}
+
+export interface LoadSourcesOptions<S, T> {
+	load: (source: S) => Promise<T[]>;
+	/** the source's items in the last good snapshot */
+	fallback: (source: S) => T[];
+	/** statuses from the last good snapshot */
+	previous?: SourceStatus[];
+}
+
+/**
+ * Load every source in parallel. A source that throws keeps serving its last good
+ * items and is reported as failing, so one broken site never empties the schedule.
+ */
+export function loadSources<S extends { label: string }, T>(
+	sources: S[],
+	{ load, fallback, previous }: LoadSourcesOptions<S, T>
+): Promise<{ source: S; items: T[]; status: SourceStatus }[]> {
+	return Promise.all(
+		sources.map(async (source) => {
+			try {
+				const items = await load(source);
+				return { source, items, status: { source: source.label, ok: true, fetchedAt: new Date().toISOString() } };
+			} catch (e) {
+				const error = e instanceof Error ? e.message : String(e);
+				console.error(`[schedule] ${source.label} failed:`, error);
+				const fetchedAt = previous?.find((s) => s.source === source.label)?.fetchedAt;
+				return { source, items: fallback(source), status: { source: source.label, ok: false, error, fetchedAt } };
+			}
+		})
+	);
+}

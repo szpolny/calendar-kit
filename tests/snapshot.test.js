@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createSnapshotCache, fetchSnapshot } from '../dist/snapshot.js';
+import { createSnapshotCache, fetchSnapshot, loadSources } from '../dist/snapshot.js';
 
 test('concurrent requests share a refresh and independent caches do not share data', async () => {
 	let calls = 0;
@@ -67,4 +67,21 @@ test('background refresh serves old data while production waits for fresh data',
 test('snapshot transport rejects unsuccessful responses', async (t) => {
 	t.mock.method(globalThis, 'fetch', async () => new Response('', { status: 503 }));
 	await assert.rejects(fetchSnapshot('https://example.com/schedule.json'), /HTTP 503/);
+});
+
+test('a failing source keeps its last good items and fetch time', async (t) => {
+	t.mock.method(console, 'error', () => {});
+	const sources = [{ label: 'up' }, { label: 'down' }];
+	const runs = await loadSources(sources, {
+		load: async (s) => {
+			if (s.label === 'down') throw new Error('HTTP 503');
+			return ['fresh'];
+		},
+		fallback: (s) => [`old ${s.label}`],
+		previous: [{ source: 'down', ok: true, fetchedAt: '2026-10-12T00:00:00.000Z' }]
+	});
+	assert.deepEqual(runs.map((r) => r.items), [['fresh'], ['old down']]);
+	assert.equal(runs[0].status.ok, true);
+	assert.deepEqual(runs[1].status, { source: 'down', ok: false, error: 'HTTP 503', fetchedAt: '2026-10-12T00:00:00.000Z' });
+	assert.strictEqual(runs[1].source, sources[1]);
 });
