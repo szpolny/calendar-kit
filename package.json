@@ -40,6 +40,14 @@
     "./SubscribeDialog.svelte": {
       "types": "./dist/components/SubscribeDialog.svelte.d.ts",
       "svelte": "./dist/components/SubscribeDialog.svelte"
+    },
+    "./SelectionList.svelte": {
+      "types": "./dist/components/SelectionList.svelte.d.ts",
+      "svelte": "./dist/components/SelectionList.svelte"
+    },
+    "./SelectionSheet.svelte": {
+      "types": "./dist/components/SelectionSheet.svelte.d.ts",
+      "svelte": "./dist/components/SelectionSheet.svelte"
     }
   },
   "sideEffects": [
