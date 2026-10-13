@@ -20,6 +20,11 @@ export function addDays(date: string, days: number): string {
 	return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
+/** End instant in ms; a date-only item ends at the close of its last day (UTC). */
+export function endMs(item: { allDay: boolean; end: string }): number {
+	return item.allDay ? Date.parse(`${item.end}T00:00:00Z`) + DAY_MS : Date.parse(item.end);
+}
+
 export function weekStart(date: string): string {
 	const dow = new Date(`${date}T00:00:00Z`).getUTCDay();
 	return addDays(date, -((dow + 6) % 7));
