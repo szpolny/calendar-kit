@@ -6,12 +6,14 @@
 		open: boolean;
 		selected: Id[];
 		title: string;
-		groups: { name: string; ids: Id[] }[];
-		items: Record<Id, { name: string; color: string }>;
+		groups: { name: string; ids: Id[]; more?: Id[] }[];
+		items: Record<Id, { name: string; color: string; short?: string }>;
 		logo: Snippet<[id: Id, layout: 'grid' | 'list']>;
+		/** plural noun for the search field, e.g. 'series'; no field when omitted */
+		searchNoun?: string;
 	}
 
-	let { open = $bindable(), selected = $bindable(), title, groups, items, logo }: Props = $props();
+	let { open = $bindable(), selected = $bindable(), title, groups, items, logo, searchNoun }: Props = $props();
 
 	const titleId = $props.id();
 	let dialog: HTMLDialogElement;
@@ -48,6 +50,6 @@
 			</div>
 		</header>
 
-		<SelectionList bind:selected {groups} {items} {logo} />
+		<SelectionList bind:selected {groups} {items} {logo} {searchNoun} />
 	</div>
 </dialog>
